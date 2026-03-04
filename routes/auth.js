@@ -1,0 +1,102 @@
+require("dotenv").config();
+const express = require("express");
+const router = express.Router();
+const bcrypt = require("bcrypt");
+const User = require("../models/User");
+const jwt = require("jsonwebtoken");
+
+router.post("/register", async (req, res) => {
+    try {
+        const user = User(req.body);
+        await user.validate();
+
+        const hash = await bcrypt.hash(user.password, 10);
+        user.password = hash;
+
+        await user.save();
+
+        return res.status(201).json({
+            success: true,
+            message: "User registered successfully",
+        });
+
+    } catch (err) {
+        if (err.code === 11000) {
+            return res.status(400).json({
+                error: {
+                    code: "Email_SERVER_ERROR",
+                    message: "Email already exists",
+                },
+            });
+        }
+
+        if (err.name === "ValidationError") {
+            const validations = Object.values(err.errors).map(e => ({
+                message: e.message,
+                field: e.path, // correspond au champ Mongoose (email, name, etc.)
+            }));
+
+            return res.status(400).json({
+                error: {
+                    code: "Validation_ERROR",
+                    message: "Validation error",
+                    validations: validations,
+                },
+            });
+        }
+
+        return res.status(500).json({
+            error: {
+                code: "INTERNAL_SERVER_ERROR",
+                message: "An error occurred",
+            },
+        });
+    }
+});
+
+router.post("/login", async (req, res) => {
+    const {email, password} = req.body;
+
+    try {
+        const user = await User.findOne({email: email});
+        if (!user) {
+            return res.status(401).json({
+                error: {
+                    code: "INVALID_CREDENTIALS",
+                    message: "Invalid credentials",
+                },
+            });
+        }
+
+        const match = bcrypt.compare(password, user.password);
+        if (!match) {
+            return res.status(401).json({
+                error: {
+                    code: "INVALID_CREDENTIALS",
+                    message: "Invalid credentials",
+                },
+            });
+        }
+        const accessToken = jwt.sign({
+            userId: user._id,
+        }, process.env.JWT_SECRET, {
+            expiresIn: "15m",
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Login successfully",
+            accessToken: accessToken,
+        });
+
+    } catch (err) {
+        return res.status(500).json({
+            error: {
+                code: "INTERNAL_SERVER_ERROR",
+                message: "An error occurred",
+            },
+        });
+    }
+});
+
+module.exports = router;
