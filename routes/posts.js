@@ -12,7 +12,7 @@ router.get("/", async (req, res) => {
     try {
         const [posts, count] = await Promise.all([
             Post.find()
-                .sort({"createdAt": -1})
+                .sort({ "createdAt": -1 })
                 .skip(offset)
                 .limit(size)
                 .lean() // plus performant si pas besoin des méthodes mongoose pour nos objets
@@ -21,7 +21,7 @@ router.get("/", async (req, res) => {
 
         return res.status(200).json({
             data: posts,
-            meta: {page, size, count},
+            meta: { page, size, count },
         });
 
     } catch (err) {
@@ -36,10 +36,10 @@ router.get("/", async (req, res) => {
 });
 
 router.post("/new", authService.verifyToken, async (req, res) => {
-    const {title, content, status} = req.body;
+    const { title, content, status } = req.body;
 
     try {
-        const post = Post({title, content, status});
+        const post = Post({ title, content, status });
         await post.validate();
 
         post._userId = req.userId;
@@ -49,7 +49,7 @@ router.post("/new", authService.verifyToken, async (req, res) => {
             success: true,
             message: "Post created successfully",
             post: post,
-        })
+        });
 
 
     } catch (err) {
@@ -138,5 +138,46 @@ router.patch("/:id/edit", authService.verifyToken, async (req, res) => {
     }
 });
 
+router.delete("/:id", authService.verifyToken, async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const post = await Post.findById(id);
+
+        if (!post) {
+            return res.status(404).json({
+                error: {
+                    code: "RESOURCE_NOT_FOUND",
+                    message: "Post not found",
+                },
+            });
+        }
+
+        if (post._userId.toString() !== req.userId) {
+            return res.status(403).json({
+                error: {
+                    code: "NOT_RESOURCE_OWNER",
+                    message: "You cannot Delete this post",
+                },
+            });
+        }
+        await Post.findByIdAndDelete(id);
+
+        return res.status(200).json({
+            success: true,
+            message: "Post deleted successfully",
+        });
+
+    } catch (err) {
+
+        return res.status(500).json({
+            error: {
+                code: "INTERNAL_SERVER_ERROR",
+                message: "An unexpected error occurred",
+            },
+        });
+    }
+
+});
 
 module.exports = router;
