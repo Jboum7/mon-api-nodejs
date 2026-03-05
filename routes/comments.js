@@ -12,12 +12,13 @@ router.post("/new/post/:postId", authService.verifyToken, async (req, res) => {
 
         comment._postId = postId;
         comment._userId = req.userId;
-        
+
         await comment.save();
 
         return res.status(201).json({
             success: true,
-            message: "Successfully created successfully",
+            message: "Comment created successfully",
+            comment: comment,
         });
 
     } catch (err) {
@@ -37,6 +38,29 @@ router.post("/new/post/:postId", authService.verifyToken, async (req, res) => {
             });
         }
 
+        return res.status(500).json({
+            error: {
+                code: "INTERNAL_SERVER_ERROR",
+                message: "An unexpected error occurred",
+            },
+        });
+    }
+});
+router.get("/:id", async (req, res) => {
+    const {id} = req.params;
+    try {
+        const comment = await Comment.findById(id);
+        if (!comment) {
+            return res.status(404).json({
+                error: {
+                    code: "RESOURCE_NOT_FOUND",
+                    message: "comment not found",
+                },
+            });
+        }
+        return res.status(200).json(comment);
+
+    } catch (err) {
         return res.status(500).json({
             error: {
                 code: "INTERNAL_SERVER_ERROR",
