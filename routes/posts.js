@@ -42,7 +42,7 @@ router.post("/new", authService.verifyToken, async (req, res) => {
         const post = Post({title, content, status});
         await post.validate();
 
-        post._userId = req.userid;
+        post._userId = req.userId;
         await post.save();
 
         return res.status(201).json({
