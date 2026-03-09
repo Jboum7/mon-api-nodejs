@@ -24,7 +24,7 @@ router.post("/register", async (req, res) => {
         if (err.code === 11000) {
             return res.status(400).json({
                 error: {
-                    code: "Email_SERVER_ERROR",
+                    code: "EMAIL_SERVER_ERROR",
                     message: "Email already exists",
                 },
             });
@@ -38,7 +38,7 @@ router.post("/register", async (req, res) => {
 
             return res.status(400).json({
                 error: {
-                    code: "Validation_ERROR",
+                    code: "VALIDATION_ERROR",
                     message: "Validation error",
                     validations: validations,
                 },

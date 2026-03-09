@@ -4,12 +4,12 @@ const mongoose = require("mongoose");
 const userShema = new mongoose.Schema({
     username: {
         type: String,
-        require: [true, "Username is required"],
+        required: [true, "Username is required"],
         trim: true,
     },
     email: {
         type: String,
-        require: [true, "Email is required"],
+        required: [true, "Email is required"],
         unique: true,
         lowercase: true,
         trim: true,
@@ -17,9 +17,9 @@ const userShema = new mongoose.Schema({
     },
     password: {
         type: String,
-        require: [true, "Password is required"],
+        required: [true, "Password is required"],
         trim: true,
-        minlenght: [6, "Password must be at least 6 characters"],
+        minlength: [6, "Password must be at least 6 characters"],
     },
 }, { timestamps: true });
 
