@@ -15,7 +15,7 @@ exports.verifyToken = (req, res, next) => {
         );
     }
 
-    const token = header.split("Bearer ")[1];
+    const token = header.split(" ")[1];
 
     jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
         if (err) {
@@ -41,6 +41,6 @@ exports.verifyToken = (req, res, next) => {
         }
 
         req.userId = decoded.userId;
-        return next();
+        next();
     });
 };

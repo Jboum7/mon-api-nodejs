@@ -40,6 +40,7 @@ router.post("/new", authService.verifyToken, async (req, res) => {
     const {title, content, status} = req.body;
 
     try {
+
         const post = Post({title, content, status});
         await post.validate();
 
@@ -52,7 +53,6 @@ router.post("/new", authService.verifyToken, async (req, res) => {
             post: post,
         });
 
-
     } catch (err) {
         if (err.name === "ValidationError") {
             const validations = Object.values(err.errors).map(e => ({
@@ -62,7 +62,7 @@ router.post("/new", authService.verifyToken, async (req, res) => {
 
             return res.status(400).json({
                 error: {
-                    code: "Validation_ERROR",
+                    code: "VALIDATION_ERROR",
                     message: "Validation error",
                     validations: validations,
                 },
@@ -79,13 +79,12 @@ router.post("/new", authService.verifyToken, async (req, res) => {
 });
 
 router.get("/:id", async (req, res) => {
-    const { id } = req.params;
+    const {id} = req.params;
 
     try {
-        const post = await Post.findById(id);
-
-        const comments = await Comment.find({
-            _postId: post._id,
+        const post = await Post.findById(id).populate({
+            path: "_userId",
+            select: "username"
         });
 
         if (!post) {
@@ -96,6 +95,13 @@ router.get("/:id", async (req, res) => {
                 },
             });
         }
+
+        const comments = await Comment.find({_postId: post._id,})
+            .sort({createdAt: -1})
+            .populate({
+                path: "_userId",
+                select: "username",
+            });
 
         return res.status(200).json({
             post: post,
@@ -113,7 +119,7 @@ router.get("/:id", async (req, res) => {
     }
 });
 
-router.patch("/:id/edit", authService.verifyToken, async (req, res) => {
+router.patch("/:id", authService.verifyToken, async (req, res) => {
     const {id} = req.params;
 
     try {

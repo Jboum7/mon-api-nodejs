@@ -68,7 +68,7 @@ router.post("/login", async (req, res) => {
             });
         }
 
-        const match = bcrypt.compare(password, user.password);
+        const match = await bcrypt.compare(password, user.password);
         if (!match) {
             return res.status(401).json({
                 error: {
@@ -87,6 +87,11 @@ router.post("/login", async (req, res) => {
             success: true,
             message: "Login successfully",
             accessToken: accessToken,
+            user: {
+                _id: user._id,
+                username: user.username,
+                email: user.email,
+            },
         });
 
     } catch (err) {
