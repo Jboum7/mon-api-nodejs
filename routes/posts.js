@@ -5,6 +5,9 @@ const authService = require("../middlewares/authService");
 const Post = require("../models/Post");
 const Comment = require("../models/Comment");
 
+const redisClient = require("../configs/redis");
+const REDIS_DEFAULT_EXPIRATION = 3600; // 1 heure
+
 router.get("/", async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const size = parseInt(req.query.size) || 10;
